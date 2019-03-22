@@ -36,7 +36,7 @@ library('tidyverse') # generic data handling and plotting
     ## ── Attaching packages ──────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──
 
     ## ✔ ggplot2 3.1.0       ✔ purrr   0.3.2  
-    ## ✔ tibble  2.0.1       ✔ dplyr   0.8.0.1
+    ## ✔ tibble  2.1.1       ✔ dplyr   0.8.0.1
     ## ✔ tidyr   0.8.3       ✔ stringr 1.4.0  
     ## ✔ readr   1.3.1       ✔ forcats 0.4.0
 
@@ -56,8 +56,8 @@ library('nlme') # mixed models
     ##     collapse
 
 ``` r
-library('ggthemr') # prettify ggplot
-ggthemr("fresh")
+#library('ggthemr') # prettify ggplot
+#ggthemr("greyscale")
 ```
 
 All data are placed in a single csv file.
@@ -95,7 +95,9 @@ discarded, I’m considering only data before 2017.
 pr <- pr %>%
   mutate(Bloc = factor(Bloc),
          Fertilizer = factor(Fertilizer)) %>%
-  filter(Year < 2017)
+  filter(Year < 2017) %>% 
+  filter(Fertilizer != "S") %>% 
+  droplevels()
 ```
 
 We create a vector containing the column names of performance indicator.
@@ -117,8 +119,8 @@ treatments <- unique(pr$Fertilizer)
 treatments
 ```
 
-    ## [1] N  P  K  B  Cu Mg S 
-    ## Levels: B Cu K Mg N P S
+    ## [1] N  P  K  B  Cu Mg
+    ## Levels: B Cu K Mg N P
 
 ## Mixed modeling
 
@@ -148,13 +150,6 @@ as
 
 ``` r
 model_conditions$model_type[model_conditions$Fertilizer == 'B' & model_conditions$performance_index == 'Brix'] <- 'none'
-model_conditions$model_type[model_conditions$Fertilizer == 'S' & model_conditions$performance_index == 'Flower_stem'] <- 'none'
-model_conditions$model_type[model_conditions$Fertilizer == 'S' & model_conditions$performance_index == 'Flower'] <- 'none'
-model_conditions$model_type[model_conditions$Fertilizer == 'S' & model_conditions$performance_index == 'Flower_per_stem'] <- 'none'
-model_conditions$model_type[model_conditions$Fertilizer == 'S' & model_conditions$performance_index == 'Fruit_stem'] <- 'none'
-model_conditions$model_type[model_conditions$Fertilizer == 'S' & model_conditions$performance_index == 'Fruit'] <- 'none'
-model_conditions$model_type[model_conditions$Fertilizer == 'S' & model_conditions$performance_index == 'Fruit_per_stem'] <- 'none'
-model_conditions$model_type[model_conditions$Fertilizer == 'S' & model_conditions$performance_index == 'Fruit_set'] <- 'none'
 ```
 
 The following instructions impose a quadratic model to some
@@ -221,14 +216,12 @@ for (i in 1:nrow(mc_N)) {
     filter(str_detect(rowname, 'Fert')) %>%
     bind_cols(tTable["p.value"])
   
-  intervals$is_significant <- factor(ifelse(intervals$p.value <= 0.05, "significant", "not significant"))
-  
   intervals$performance <- mc_N$performance_index[i]
   
   interval_lmmN[[i]] <- intervals
 }
 interval_lmmN <- do.call(rbind.data.frame, interval_lmmN)
-interval_lmmN$pvalue_alpha <- ifelse(interval_lmmN$is_significant == "significant", paste("≤", alpha), paste(">", alpha))
+interval_lmmN$pvalue_alpha <- ifelse(interval_lmmN$p.value <= alpha, paste("≤", alpha), paste(">", alpha))
 ```
 
 Prettier performance indexes and fertilizer type.
@@ -262,24 +255,27 @@ plot_cols <- 4
 plot_rows <- 3
 
 interval_lmmN %>% ggplot(aes(x = est., y = rowname)) +
-  facet_wrap(. ~ performance, scales = "free", labeller = label_parsed) +
+  facet_wrap(. ~ performance, scales = "free", labeller = label_parsed, switch = "x") +
   geom_vline(xintercept = 0, lty = 1) +
-  geom_segment(mapping = aes(x = lower, xend = upper, 
-                             yend = rowname,
-                             colour = pvalue_alpha),
-               size = 1) +
-  geom_point(aes(colour = pvalue_alpha), size = 2) +
-  labs(y = "", colour="Slope p-value") +
-  scale_colour_manual(values = swatch()[3:4]) +
+  geom_segment(mapping = aes(x = lower, xend = upper, yend = rowname), size = 1) + # , colour = pvalue_alpha
+  geom_point(size = 3) + # aes(colour = pvalue_alpha), 
+  geom_text(aes(x = lower, label = signif(lower, 3)), hjust = 1.2) +
+  geom_label(aes(label = signif(est., 3))) +
+  geom_text(aes(x = upper, label = signif(upper, 3)), hjust = -0.2) +
+  labs(y = "", x = "") +
+  scale_x_continuous(expand = expand_scale(mult = c(0.5, 0.5))) +
+  #theme_bw() +
   theme(strip.text.y = element_text(angle = 0),
-        legend.position = "bottom")
+        axis.title.x = element_blank(),
+        strip.background = element_rect(fill = "transparent", colour = "transparent"),
+        strip.placement = "outside")
 ```
 
 ![](statistics_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
 ``` r
-ggsave("images/sources-nitrogen.pdf", width = plot_cols * 2.5, height = plot_rows * 2.5, dpi=300)
-ggsave("images/sources-nitrogen.png", width = plot_cols * 2.5, height = plot_rows * 2.5, dpi=300)
+ggsave("images/sources-nitrogen.pdf", width = plot_cols * 5, height = plot_rows * 2, dpi=300)
+ggsave("images/sources-nitrogen.png", width = plot_cols * 5, height = plot_rows * 2, dpi=300)
 ```
 
 ### Effect of fertlizers and doses
@@ -306,16 +302,18 @@ for (i in 1:nrow(model_conditions)) {
     lmm[[i]] <- lme(as.formula(paste0(performance_i, " ~ Rate")),
                     random = ~ 1 + 1|Year/Site/Bloc,
                     data = table_mm_i)
-    is_significant <- summary(lmm[[i]])$tTable[2, 5] <= alpha
-    
+    p_value <- summary(lmm[[i]])$tTable[2, 5]
+    slope <- coef(lmm[[i]])[1, 2]
   } else if (model_type_i == 'quadratic') {
     lmm[[i]] <- lme(as.formula(paste0(performance_i, " ~ Rate + I(Rate^2)")),
                     random = ~ 1 + 1|Year/Site/Bloc,
                     data = table_mm_i)
-    is_significant <- summary(lmm[[i]])$tTable[3, 5] <= alpha
+    p_value <- summary(lmm[[i]])$tTable[3, 5]
+    slope <- coef(lmm[[i]])[1, 3]
   } else if (model_type_i == 'none') {
     lmm[[i]] <- NA
-    is_significant <- NA
+    p_value <- NA
+    slope <- NA
   } else {
     print("Model type not recognized. Choose linear or quadratic.")
   }
@@ -330,11 +328,12 @@ for (i in 1:nrow(model_conditions)) {
                             performance = y_seq,
                             Fertilizer = treatment_i,
                             performance_index = performance_i,
-                            is_significant = is_significant)
+                            p_value = p_value,
+                            slope = slope)
   }
 }
 pred <- do.call(rbind.data.frame, pred) # list to data frame
-pred$pvalue_alpha <- factor(ifelse(pred$is_significant, paste("≤", alpha), paste(">", alpha)))
+pred$pvalue_alpha <- factor(ifelse(pred$p_value <= alpha, paste("≤", alpha), paste(">", alpha)))
 ```
 
 Before plotting, the original data are gathered by performance indexes.
@@ -394,172 +393,134 @@ Results will be plotted by nutrient and performance types.
 ``` r
 plot_cols <- 5
 plot_rows <- 3
+pred_gg <- pred %>% filter(Fertilizer %in% c("N", "P", "K") & performance_index %in% quality_index) %>% drop_na()
 
 pr_tidy %>%
   filter(Fertilizer %in% c("N", "P", "K") & performance_index %in% quality_index) %>%
   ggplot(aes(Rate, performance)) +
-  facet_wrap(Fertilizer ~ performance_index_pretty, scales = "free", ncol = 5, labeller = label_parsed) +
+  facet_grid(performance_index_pretty ~ Fertilizer, scales = "free", labeller = label_parsed, switch = "y") +
   geom_point(alpha = 0.3) +
-  geom_line(data = pred %>% filter(Fertilizer %in% c("N", "P", "K") & performance_index %in% quality_index) %>% drop_na(),
-            aes(colour = pvalue_alpha, lty = pvalue_alpha), size = 1) +
-  labs(x = expression("Rate (kg ha"^"-1"~")"), y = "Performance",
-       colour = "Slope p-value", lty = "") +
-  scale_linetype_manual(values = c("dashed", "solid"), guide = FALSE) +
-  scale_colour_manual(values = swatch()[3:4]) +
-  theme(legend.position = "bottom")
+  geom_line(data = pred_gg, size = 1) +
+  labs(x = expression("Rate (kg ha"^"-1"~")"), y = "Performance") +
+  geom_label(data = pred_gg, aes(label = paste("Slope =", signif(slope, 3))), x = -Inf, y = Inf, hjust = -0.1, vjust = 1.5) +
+  geom_label(data = pred_gg, aes(label = paste("p =", signif(p_value, 3))), x = -Inf, y = Inf, hjust = -0.1, vjust = 2.5) +
+  #theme_bw() +
+  theme(axis.title.y = element_blank(),
+        strip.background = element_rect(fill = "transparent", colour = "transparent"),
+        strip.placement = "outside",
+        strip.text.y = element_text(angle=270))
 ```
 
 ![](statistics_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
 ``` r
-ggsave("images/grid_macro&quality.pdf", width = plot_cols * 2.5, height = plot_rows * 2.5, dpi=300)
-ggsave("images/grid_macro&quality.png", width = plot_cols * 2.5, height = plot_rows * 2.5, dpi=300)
+ggsave("images/grid_macro&quality.pdf", width = plot_cols * 3, height = plot_rows * 2.5, dpi=300)
+ggsave("images/grid_macro&quality.png", width = plot_cols * 3, height = plot_rows * 2.5, dpi=300)
 ```
 
 ##### Physiology
 
 ``` r
-plot_cols <- 7
-plot_rows <- 3
+n_perf <- 7
+n_elem <- 3
+pred_gg <- pred %>% filter(Fertilizer %in% c("N", "P", "K") & performance_index %in% physiology_index) %>% drop_na()
 
 pr_tidy %>%
   filter(Fertilizer %in% c("N", "P", "K") & performance_index %in% physiology_index) %>%
   drop_na() %>%
   ggplot(aes(Rate, performance)) +
-  facet_wrap(Fertilizer ~ performance_index_pretty, scales = "free", ncol = 7, labeller = label_parsed) +
+  facet_grid(performance_index_pretty ~ Fertilizer, scales = "free", labeller = label_parsed, switch = "y") +
   geom_point(alpha = 0.3) +
-  geom_line(data = pred %>% filter(Fertilizer %in% c("N", "P", "K") & performance_index %in% physiology_index) %>% drop_na(),
-            aes(colour = pvalue_alpha, lty = pvalue_alpha), size = 1) +
-  labs(x = expression("Rate (kg ha"^"-1"~")"), y = "Performance",
-       colour = "Slope p-value", lty = "") +
-  scale_linetype_manual(values = c("dashed", "solid"), guide = FALSE) +
-  scale_colour_manual(values = swatch()[3:4]) +
-  theme(legend.position = "bottom")
+  geom_line(data = pred_gg, size = 1) +
+  labs(x = expression("Rate (kg ha"^"-1"~")"), y = "Performance") +
+  geom_label(data = pred_gg, aes(label = paste("Slope =", signif(slope, 3))), x = -Inf, y = Inf, hjust = -0.1, vjust = 1.5) +
+  geom_label(data = pred_gg, aes(label = paste("p =", signif(p_value, 3))), x = -Inf, y = Inf, hjust = -0.1, vjust = 2.5) +
+  #theme_bw() +
+  theme(axis.title.y = element_blank(),
+        strip.background = element_rect(fill = "transparent", colour = "transparent"),
+        strip.placement = "outside",
+        strip.text.y = element_text(angle=270))
 ```
 
 ![](statistics_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
 ``` r
-ggsave("images/grid_macro&physiology.pdf", width = plot_cols * 2.5, height = plot_rows * 2.5, dpi=300)
-ggsave("images/grid_macro&physiology.png", width = plot_cols * 2.5, height = plot_rows * 2.5, dpi=300)
+ggsave("images/grid_macro&physiology.pdf", width = n_elem * 3, height = n_perf * 2.5, dpi=300)
+ggsave("images/grid_macro&physiology.png", width = n_elem * 3, height = n_perf * 2.5, dpi=300)
 ```
 
-#### Secondary-elements
+#### Secondary and micro-elements
 
 ##### Quality
 
 ``` r
-plot_cols <- 5
-plot_rows <- 2
+n_perf <- 5
+n_elem <- 3
+pred_gg <- pred %>% filter(Fertilizer %in% c("Mg", "B", "Cu") & performance_index %in% quality_index) %>% drop_na()
 
+library(grid)
+library(gridExtra)
+```
+
+    ## 
+    ## Attaching package: 'gridExtra'
+
+    ## The following object is masked from 'package:dplyr':
+    ## 
+    ##     combine
+
+``` r
 pr_tidy %>%
-  filter(Fertilizer %in% c("Mg", "S") & performance_index %in% quality_index) %>%
+  filter(Fertilizer %in% c("Mg", "B", "Cu") & performance_index %in% quality_index) %>%
   drop_na() %>%
   ggplot(aes(Rate, performance)) +
-  facet_wrap(Fertilizer ~ performance_index_pretty, scales = "free", ncol = 5, labeller = label_parsed) +
+  facet_grid(performance_index_pretty ~ Fertilizer, scales = "free", labeller = label_parsed, switch = "y") +
   geom_point(alpha = 0.3) +
-  geom_line(data = pred %>% filter(Fertilizer %in% c("Mg", "S") & performance_index %in% quality_index) %>% drop_na(),
-            aes(colour = pvalue_alpha, lty = pvalue_alpha), size = 1) +
-  labs(x = expression("Rate (kg ha"^"-1"~")"), y = "Performance",
-       colour = "Slope p-value", lty = "") +
-  scale_linetype_manual(values = c("dashed", "solid"), guide = FALSE) +
-  scale_colour_manual(values = swatch()[3:4])+
-  theme(legend.position = "bottom")
+  geom_line(data = pred_gg, size = 1) +
+  labs(x = expression("Rate (kg ha"^"-1"~")"), y = "Performance") +
+  geom_label(data = pred_gg, aes(label = paste("Slope =", signif(slope, 3))), x = -Inf, y = Inf, hjust = -0.1, vjust = 1.5) +
+  geom_label(data = pred_gg, aes(label = paste("p =", signif(p_value, 3))), x = -Inf, y = Inf, hjust = -0.1, vjust = 2.5) +
+  #theme_bw() +
+  theme(axis.title.y = element_blank(),
+        strip.background = element_rect(fill = 'transparent'),
+        strip.placement = 'outside',
+        strip.text.y = element_text(angle=270))
 ```
 
 ![](statistics_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
 ``` r
-ggsave("images/grid_secondary&quality.pdf", width = plot_cols * 2.5, height = plot_rows * 2.5, dpi=300)
-ggsave("images/grid_secondary&quality.png", width = plot_cols * 2.5, height = plot_rows * 2.5, dpi=300)
+ggsave("images/grid_secondary-micro&quality.pdf", width = n_elem * 3, height = n_perf * 2.5, dpi=300)
+ggsave("images/grid_secondary-micro&quality.png", width = n_elem * 3, height = n_perf * 2.5, dpi=300)
 ```
 
 ##### Physiology
 
 ``` r
-plot_cols <- 7
-plot_rows <- 1
-
-options(repr.plot.width = plot_cols * 2, repr.plot.height = plot_rows * 3)
-
+n_perf <- 7
+n_elem <- 3
+pred_gg <- pred %>% filter(Fertilizer %in% c("Mg", "B", "Cu") & performance_index %in% physiology_index) %>% drop_na()
 
 pr_tidy %>%
-  filter(Fertilizer %in% c("Mg", "S") & performance_index %in% physiology_index) %>%
+  filter(Fertilizer %in% c("Mg", "B", "Cu") & performance_index %in% physiology_index) %>%
   drop_na() %>%
   ggplot(aes(Rate, performance)) +
-  facet_wrap(Fertilizer ~ performance_index_pretty, scales = "free", ncol = 7, labeller = label_parsed) +
+  facet_grid(performance_index_pretty ~ Fertilizer, scales = "free", labeller = label_parsed, switch = "y") +
   geom_point(alpha = 0.3) +
-  geom_line(data = pred %>% filter(Fertilizer %in% c("Mg", "S") & performance_index %in% physiology_index) %>% drop_na(),
-            aes(colour = pvalue_alpha, lty = pvalue_alpha), size = 1) +
-  labs(x = expression("Rate (kg ha"^"-1"~")"), y = "Performance",
-       colour = "Slope p-value", lty = "") +
-  scale_linetype_manual(values = c("dashed", "solid"), guide = FALSE) +
-  scale_colour_manual(values = swatch()[3:4])+
-  theme(legend.position = "bottom")
+  geom_line(data = pred_gg, size = 1) +
+  labs(x = expression("Rate (kg ha"^"-1"~")"), y = "Performance") +
+  geom_label(data = pred_gg, aes(label = paste("Slope =", signif(slope, 3))), x = -Inf, y = Inf, hjust = -0.1, vjust = 1.5) +
+  geom_label(data = pred_gg, aes(label = paste("p =", signif(p_value, 3))), x = -Inf, y = Inf, hjust = -0.1, vjust = 2.5) +
+  #theme_bw() +
+  theme(axis.title.y = element_blank(),
+        strip.background = element_rect(fill = 'transparent'),
+        strip.placement = 'outside',
+        strip.text.y = element_text(angle=270))
 ```
 
 ![](statistics_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
 ``` r
-ggsave("images/grid_secondary&physiology.pdf", width = plot_cols * 2.5, height = plot_rows * 2.5, dpi=300)
-ggsave("images/grid_secondary&physiology.png", width = plot_cols * 2.5, height = plot_rows * 2.5, dpi=300)
-```
-
-#### Micro-elements
-
-##### Quality
-
-``` r
-plot_cols <- 5
-plot_rows <- 2
-
-pr_tidy %>%
-  filter(Fertilizer %in% c("B", "Cu") & performance_index %in% quality_index) %>%
-  filter(Fertilizer != "B" | performance_index != "Brix") %>%
-  drop_na() %>%
-  ggplot(aes(Rate, performance)) +
-  facet_wrap(Fertilizer ~ performance_index_pretty, scales = "free", ncol = 5, labeller = label_parsed) +
-  geom_point(alpha = 0.3) +
-  geom_line(data = pred %>% filter(Fertilizer %in% c("B", "Cu") & performance_index %in% quality_index) %>% drop_na(),
-            aes(colour = pvalue_alpha, lty = pvalue_alpha), size = 1) +
-  labs(x = expression("Rate (kg ha"^"-1"~")"), y = "Performance",
-       colour = "Slope p-value", lty = "") +
-  scale_linetype_manual(values = c("dashed", "solid"), guide = FALSE) +
-  scale_colour_manual(values = swatch()[3:4]) +
-  theme(legend.position = "bottom")
-```
-
-![](statistics_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
-
-``` r
-ggsave("images/grid_micro&quality.pdf", width = plot_cols * 2.5, height = plot_rows * 2.5, dpi=300)
-ggsave("images/grid_micro&quality.png", width = plot_cols * 2.5, height = plot_rows * 2.5, dpi=300)
-```
-
-##### Physiology
-
-``` r
-plot_cols <- 7
-plot_rows <- 2
-
-pr_tidy %>%
-  filter(Fertilizer %in% c("B", "Cu") & performance_index %in% physiology_index) %>%
-  drop_na() %>%
-  ggplot(aes(Rate, performance)) +
-  facet_wrap(Fertilizer ~ performance_index_pretty, scales = "free", ncol = 7, labeller = label_parsed) +
-  geom_point(alpha = 0.3) +
-  geom_line(data = pred %>% filter(Fertilizer %in% c("B", "Cu") & performance_index %in% physiology_index) %>% drop_na(),
-            aes(colour = pvalue_alpha, lty = pvalue_alpha), size = 1) +
-  labs(x = expression("Rate (kg ha"^"-1"~")"), y = "Performance",
-       colour = "Slope p-value", lty = "") +
-  scale_linetype_manual(values = c("dashed", "solid"), guide = FALSE) +
-  scale_colour_manual(values = swatch()[3:4])+
-  theme(legend.position = "bottom")
-```
-
-![](statistics_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
-
-``` r
-ggsave("images/grid_micro&physiology.pdf", width = plot_cols * 2.5, height = plot_rows * 2.5, dpi=300)
-ggsave("images/grid_micro&physiology.png", width = plot_cols * 2.5, height = plot_rows * 2.5, dpi=300)
+ggsave("images/grid_secondary-micro&physiology.pdf", width = n_elem * 3, height = n_perf * 2.5, dpi=300)
+ggsave("images/grid_secondary-micro&physiology.png", width = n_elem * 3, height = n_perf * 2.5, dpi=300)
 ```
