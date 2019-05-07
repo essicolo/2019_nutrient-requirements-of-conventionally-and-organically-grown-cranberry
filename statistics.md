@@ -26,38 +26,15 @@ B, and S.
 
 ## Initiate session
 
-To initiate the session, we load the following
-    libraries.
+To initiate the session, we load the following libraries.
 
 ``` r
-library('tidyverse') # generic data handling and plotting
-```
-
-    ## ── Attaching packages ──────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──
-
-    ## ✔ ggplot2 3.1.0       ✔ purrr   0.3.2  
-    ## ✔ tibble  2.1.1       ✔ dplyr   0.8.0.1
-    ## ✔ tidyr   0.8.3       ✔ stringr 1.4.0  
-    ## ✔ readr   1.3.1       ✔ forcats 0.4.0
-
-    ## ── Conflicts ─────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
-    ## ✖ dplyr::filter() masks stats::filter()
-    ## ✖ dplyr::lag()    masks stats::lag()
-
-``` r
-library('nlme') # mixed models
-```
-
-    ## 
-    ## Attaching package: 'nlme'
-
-    ## The following object is masked from 'package:dplyr':
-    ## 
-    ##     collapse
-
-``` r
-#library('ggthemr') # prettify ggplot
-#ggthemr("greyscale")
+library("tidyverse") # generic data handling and plotting
+library("nlme") # mixed models
+library("grid")
+library("gridExtra")
+library("ggthemr") # prettify ggplot
+ggthemr("greyscale")
 ```
 
 All data are placed in a single csv file.
@@ -65,18 +42,6 @@ All data are placed in a single csv file.
 ``` r
 pr <- read_csv(file="data/performance-fertilisation.csv")
 ```
-
-    ## Parsed with column specification:
-    ## cols(
-    ##   .default = col_double(),
-    ##   Cropping_system = col_character(),
-    ##   Treatment = col_character(),
-    ##   Fertilizer_type = col_character(),
-    ##   Fertilizer = col_character(),
-    ##   Site = col_character()
-    ## )
-
-    ## See spec(...) for full column specifications.
 
 ### Arrange data
 
@@ -104,23 +69,13 @@ We create a vector containing the column names of performance indicator.
 
 ``` r
 performance_index <- colnames(pr)[10:21]
-performance_index
 ```
-
-    ##  [1] "TAcy"            "Brix"            "Firmness"       
-    ##  [4] "Berry_weight"    "Yield"           "Flower_stem"    
-    ##  [7] "Flower"          "Flower_per_stem" "Fruit_stem"     
-    ## [10] "Fruit"           "Fruit_per_stem"  "Fruit_set"
 
 Another object contains the names of the fertilizer treatment.
 
 ``` r
 treatments <- unique(pr$Fertilizer)
-treatments
 ```
-
-    ## [1] N  P  K  B  Cu Mg
-    ## Levels: B Cu K Mg N P
 
 ## Mixed modeling
 
@@ -403,12 +358,12 @@ pr_tidy %>%
   geom_line(data = pred_gg, size = 1) +
   labs(x = expression("Rate (kg ha"^"-1"~")"), y = "Performance") +
   geom_label(data = pred_gg, aes(label = paste("Slope =", signif(slope, 3))), x = -Inf, y = Inf, hjust = -0.1, vjust = 1.5) +
-  geom_label(data = pred_gg, aes(label = paste("p =", signif(p_value, 3))), x = -Inf, y = Inf, hjust = -0.1, vjust = 2.5) +
-  #theme_bw() +
+  geom_label(data = pred_gg, aes(label = paste("p =", signif(p_value, 3))), x = -Inf, y = Inf, hjust = -0.18, vjust = 2.5) +
   theme(axis.title.y = element_blank(),
         strip.background = element_rect(fill = "transparent", colour = "transparent"),
         strip.placement = "outside",
-        strip.text.y = element_text(angle=270))
+        strip.text.y = element_text(angle=270),
+        strip.text.x = element_text(size = 18))
 ```
 
 ![](statistics_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
@@ -434,12 +389,13 @@ pr_tidy %>%
   geom_line(data = pred_gg, size = 1) +
   labs(x = expression("Rate (kg ha"^"-1"~")"), y = "Performance") +
   geom_label(data = pred_gg, aes(label = paste("Slope =", signif(slope, 3))), x = -Inf, y = Inf, hjust = -0.1, vjust = 1.5) +
-  geom_label(data = pred_gg, aes(label = paste("p =", signif(p_value, 3))), x = -Inf, y = Inf, hjust = -0.1, vjust = 2.5) +
+  geom_label(data = pred_gg, aes(label = paste("p =", signif(p_value, 3))), x = -Inf, y = Inf, hjust = -0.18, vjust = 2.5) +
   #theme_bw() +
   theme(axis.title.y = element_blank(),
         strip.background = element_rect(fill = "transparent", colour = "transparent"),
         strip.placement = "outside",
-        strip.text.y = element_text(angle=270))
+        strip.text.y = element_text(angle=270),
+        strip.text.x = element_text(size = 18))
 ```
 
 ![](statistics_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
@@ -458,18 +414,6 @@ n_perf <- 5
 n_elem <- 3
 pred_gg <- pred %>% filter(Fertilizer %in% c("Mg", "B", "Cu") & performance_index %in% quality_index) %>% drop_na()
 
-library(grid)
-library(gridExtra)
-```
-
-    ## 
-    ## Attaching package: 'gridExtra'
-
-    ## The following object is masked from 'package:dplyr':
-    ## 
-    ##     combine
-
-``` r
 pr_tidy %>%
   filter(Fertilizer %in% c("Mg", "B", "Cu") & performance_index %in% quality_index) %>%
   drop_na() %>%
@@ -479,12 +423,12 @@ pr_tidy %>%
   geom_line(data = pred_gg, size = 1) +
   labs(x = expression("Rate (kg ha"^"-1"~")"), y = "Performance") +
   geom_label(data = pred_gg, aes(label = paste("Slope =", signif(slope, 3))), x = -Inf, y = Inf, hjust = -0.1, vjust = 1.5) +
-  geom_label(data = pred_gg, aes(label = paste("p =", signif(p_value, 3))), x = -Inf, y = Inf, hjust = -0.1, vjust = 2.5) +
-  #theme_bw() +
+  geom_label(data = pred_gg, aes(label = paste("p =", signif(p_value, 3))), x = -Inf, y = Inf, hjust = -0.18, vjust = 2.5) +
   theme(axis.title.y = element_blank(),
         strip.background = element_rect(fill = 'transparent'),
         strip.placement = 'outside',
-        strip.text.y = element_text(angle=270))
+        strip.text.y = element_text(angle=270),
+        strip.text.x = element_text(size = 18))
 ```
 
 ![](statistics_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
@@ -510,12 +454,13 @@ pr_tidy %>%
   geom_line(data = pred_gg, size = 1) +
   labs(x = expression("Rate (kg ha"^"-1"~")"), y = "Performance") +
   geom_label(data = pred_gg, aes(label = paste("Slope =", signif(slope, 3))), x = -Inf, y = Inf, hjust = -0.1, vjust = 1.5) +
-  geom_label(data = pred_gg, aes(label = paste("p =", signif(p_value, 3))), x = -Inf, y = Inf, hjust = -0.1, vjust = 2.5) +
+  geom_label(data = pred_gg, aes(label = paste("p =", signif(p_value, 3))), x = -Inf, y = Inf, hjust = -0.18, vjust = 2.5) +
   #theme_bw() +
   theme(axis.title.y = element_blank(),
         strip.background = element_rect(fill = 'transparent'),
         strip.placement = 'outside',
-        strip.text.y = element_text(angle=270))
+        strip.text.y = element_text(angle=270),
+        strip.text.x = element_text(size = 18))
 ```
 
 ![](statistics_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
