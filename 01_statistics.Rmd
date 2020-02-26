@@ -4,8 +4,6 @@ author: Serge-Étienne Parent
 output: rmarkdown::github_document
 ---
 
-**Computations by Serge-Étienne Parent**
-
 When managing cranberry nutrition, growers are most interested in determining the factor(s) that limit growth and yield. In this notebook, we correlate the performance of cranberry production with fertilizers.
 
 The performance of cranberry production can be assessed by the following metrics.
