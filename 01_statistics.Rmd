@@ -1,5 +1,6 @@
 ---
 title: "Nutrient Requirements of Conventionally and Organically Grown Cranberry (*Vaccinium macrocarpon* Ait.) - Statistics"
+author: Serge-Étienne Parent
 output: rmarkdown::github_document
 ---
 
@@ -22,6 +23,7 @@ The performance of cranberry production can be assessed by the following metrics
 We tested fertilizers provides the following nutrients: N, P, K, Mg, Cu, B, and S.
 
 ## Initiate session
+
 To initiate the session, we load the following libraries.
 
 ```{r, message = FALSE}
@@ -38,6 +40,7 @@ data_init <- read_csv(file="data/data_init.csv", guess_max = 1729)
 ```
 
 ### Arrange data
+
 A couple of data handling is needed for the analysis. First, some variable types must be changed. First, TAcy is a performance indicator. It is stored in two different columns, depending on the methodology. It merge in a single column depending on the presence/absence of data.
 
 ```{r}
@@ -61,33 +64,26 @@ The second reference table links crop performance to the columns where the value
 ```{r}
 performance_df <- tibble(performance_name = c("TAcy", "Brix", "Firmness", "Berry_weight",
                                               "Berry_moisture", "Yield",
-                                              'Fruit_stem', 'Fruit'),
+                                              "Fruit_stem", "Fruit"),
                          performance_colname = c("TAcy","Fruit_Brix_degreeBrix", "Fruit_Firmness_N_s", "Fruit_weight_g",
                                                  "Fruit_moisture_berry_perc", "Fruit_yield_Mg_ha", 
                                                  "Fruiting_upright_Nb_m2", "Nb_Fruit_m2"),
-                         performance_labels = c("TAcy~plain('(')~mg~100^{-1}~plain(')')",
+                         performance_labels = c("TAcy~plain('(')~mg~100^{plain('-1')}~plain(')')",
                                                 "{}^o~Brix",
-                                                "Firmness~plain('(')~N~sec^{-1}~plain(')')",
+                                                "Firmness~plain('(')~N~sec^{plain('-1')}~plain(')')",
                                                 "Berry~weight~plain('(')~g~plain(')')",
-                                                "Berry~moisture~plain('(')~plain(percentage)~plain(')')",
-                                                "Berry~yield~plain('(')~Mg~ha^{-1}~plain(')')",
-                                                #"Reproductive~upright~plain('(')~m^{-2}~plain(')')",
-                                                #"Flower~count~plain('(')~m^{-2}~plain(')')",
-                                                #"Flower~per~repr.~upright~plain('(')~m^{-2}~plain(')')",
-                                                #"Fruiting~upright~plain('(')~m^{-2}~plain(')')",
-                                                "Berry~count~plain('(')~m^{-2}~plain(')')",
-                                                "Berry~per~fruiting~upright~plain('(')~m^{-2}~plain(')')" # "Fruit~set~plain('(%)')",
+                                                "Berry~moisture~plain('(')~plain('%')~plain(')')",
+                                                "Berry~yield~plain('(')~Mg~ha^{plain('-1')}~plain(')')",
+                                                #"Reproductive~upright~plain('(')~m^{plain('-2')}~plain(')')",
+                                                #"Flower~count~plain('(')~m^{plain('-2')}~plain(')')",
+                                                #"Flower~per~repr.~upright~plain('(')~m^{plain('-2')}~plain(')')",
+                                                #"Fruiting~upright~plain('(')~m^{plain('-2')}~plain(')')",
+                                                "Berry~count~plain('(')~m^{plain('-2')}~plain(')')",
+                                                "Berry~per~fruiting~upright~plain('(')~m^{plain('-2')}~plain(')')" # "Fruit~set~plain('(%)')",
                          ),
                          performance_type = c("Quality", "Quality", "Quality", "Quality",
                                               "Quality", "Quality",
                                               "Physiology", "Physiology"))
-
-# missing performance indices: 'Flower_stem', 'Flower', 'Flower_per_stem', 'Fruit_per_stem', 'Fruit_set'
-# - reproductive upright
-# - flower count /m²
-# - flower per reproductive upright
-# - berry per fruiting upright
-# - fruit set
 ```
 
 The next chunk creates a column where I store the dose of the corresponding trial.
@@ -119,41 +115,42 @@ data_stats %>%
   sample_n(10)
 ```
 
-
 ## Mixed modeling
+
 Combination of performance-treatment will be subjected to a mixed model, but some with a linear model, and other with a quadratic model. Moreover, some combinaisons of performance-treatment were not tested. We aim to loop each possible combinaison to fit a linear model, a quadratic model or no model at all. The first step of this process is to create a grid of these combinaisons.
 
 ```{r}
 model_conditions <- expand.grid(performance_name = performance_df$performance_name, 
                                 Fertilizer_trial = c("N", "P", "K", "Mg", "B", "Cu"))
 model_conditions$index <- 1:nrow(model_conditions)
-model_conditions
+model_conditions %>%
+  sample_n(5)
 ```
 
 We are adding a column to the grid containing the information on which option to choose. By default, the option is linear.
 
 ```{r}
-model_conditions$model_type = 'linear'
+model_conditions$model_type <- "linear"
 ```
 
-Where the modeling threw erors due to lack of data, I imposed `'none'` as `model_type`.
+Where the modeling threw erors due to lack of data, I imposed `"none"` as `model_type`.
 
 ```{r}
-model_conditions$model_type[model_conditions$Fertilizer == 'B' & model_conditions$performance_index == 'Brix'] <- 'none'
+model_conditions$model_type[model_conditions$Fertilizer == "B" & model_conditions$performance_index == "Brix"] <- "none"
 ```
 
 The following instructions impose a quadratic model to some combinaisons. We selected quadratic where it visually seemed appropriate.
 
 ```{r}
-model_conditions$model_type[model_conditions$Fertilizer == 'N' & model_conditions$performance_index == "Yield"] <- 'quadratic'
-model_conditions$model_type[model_conditions$Fertilizer == 'N' & model_conditions$performance_index == "Berry_weight"] <- 'quadratic'
-model_conditions$model_type[model_conditions$Fertilizer == 'K' & model_conditions$performance_index == "Yield"] <- 'quadratic'
-model_conditions$model_type[model_conditions$Fertilizer == 'K' & model_conditions$performance_index == "Berry_weight"] <- 'quadratic'
+model_conditions$model_type[model_conditions$Fertilizer == "N" & model_conditions$performance_index == "Yield"] <- "quadratic"
+model_conditions$model_type[model_conditions$Fertilizer == "N" & model_conditions$performance_index == "Berry_weight"] <- "quadratic"
+model_conditions$model_type[model_conditions$Fertilizer == "K" & model_conditions$performance_index == "Yield"] <- "quadratic"
+model_conditions$model_type[model_conditions$Fertilizer == "K" & model_conditions$performance_index == "Berry_weight"] <- "quadratic"
 ```
 
 ### Effect of nitrogen source
 
-We hypothesized ($H0$) that cranberry quality and physiology don't respond N sources after dicarding the dose effect.  We test the linear and quadratic effects of dose and the linear effect of fertilizer type. We extract the effect of the fertilizer type from the model. The following cell runs mixed models on nitrogen trials and save them in a list.
+We hypothesized ($H_0$) that cranberry quality and physiology don't respond N sources after dicarding the dose effect. We test the linear and quadratic effects of dose and the linear effect of fertilizer type. We extract the effect of the fertilizer type from the model. The following cell runs mixed models on nitrogen trials and save them in a list.
 
 ```{r}
 alpha <- 0.05
@@ -169,21 +166,21 @@ for (i in 1:nrow(mc_N)) {
   
   table_mm_i <- data_stats %>%
     filter(Fertilizer_trial == "N") %>%
-    select(one_of(c('Year','Field', "Treatment", 'Block', "Fertilizer-tot-dose_N_kg_ha",'Cropping_system', "Fertilizer_formula", performance_i))) %>%
+    select(one_of(c("Year","Field", "Treatment", "Block", "Fertilizer-tot-dose_N_kg_ha","Cropping_system", "Fertilizer_formula", performance_i))) %>%
     rename(Dose = "Fertilizer-tot-dose_N_kg_ha") %>%
     drop_na()
   
   table_mm_i$Fertilizer_formula <- relevel(factor(table_mm_i$Fertilizer_formula), ref = "21-0-0")
   
-  if (model_type_i == 'linear') {
+  if (model_type_i == "linear") {
     lmm_N[[i]] <- lme(as.formula(paste0(performance_i, " ~ Dose + Fertilizer_formula ")),
                       random = ~ 1 + 1|Year/Field/Treatment,
                       data = table_mm_i)      
-  } else if (model_type_i == 'quadratic') {
+  } else if (model_type_i == "quadratic") {
     lmm_N[[i]] <- lme(as.formula(paste0(performance_i, " ~ Dose + I(Dose^2) + Fertilizer_formula")),
                       random = ~ 1 + 1|Year/Field/Treatment,
                       data = table_mm_i)
-  } else if (model_type_i == 'none') {
+  } else if (model_type_i == "none") {
     lmm_N[[i]] <- NA
   } else {
     print("Model type not recognized. Choose linear or quadratic.")
@@ -192,12 +189,12 @@ for (i in 1:nrow(mc_N)) {
   tTable <- summary(lmm_N[[i]])$tTable%>%
     data.frame() %>%
     rownames_to_column() %>%
-    filter(str_detect(rowname, 'Fert'))
+    filter(str_detect(rowname, "Fert"))
   
   intervals <- intervals(lmm_N[[i]], which = "fixed")[[1]] %>%
     data.frame() %>%
     rownames_to_column() %>%
-    filter(str_detect(rowname, 'Fert')) %>%
+    filter(str_detect(rowname, "Fert")) %>%
     bind_cols(tTable["p.value"])
   
   intervals$rowname <- tTable$rowname <- gsub("Fertilizer_formula*", "", tTable$rowname)
@@ -232,13 +229,13 @@ interval_lmmN %>% ggplot(aes(x = est., y = rowname)) +
   geom_text(aes(x = upper, label = signif(upper, 3)), hjust = -0.2) +
   labs(y = "", x = "") +
   scale_x_continuous(expand = expand_scale(mult = c(0.5, 0.5))) +
+  theme_bw() +
   theme(strip.text.y = element_text(angle = 0),
         axis.title.x = element_blank(),
         strip.background = element_rect(fill = "transparent", colour = "transparent"),
-        strip.placement = "outside")
-
-ggsave("images/sources-nitrogen.pdf", width = plot_cols * 5, height = plot_rows * 2, dpi=300)
-ggsave("images/sources-nitrogen.png", width = plot_cols * 5, height = plot_rows * 2, dpi=300)
+        strip.placement = "outside") +
+  ggsave("images/sources-nitrogen.pdf", width = plot_cols * 5, height = plot_rows * 2, dpi=300) +
+  ggsave("images/sources-nitrogen.png", width = plot_cols * 5, height = plot_rows * 2, dpi=300)
 ```
 
 ### Effect of fertlizers and doses
@@ -258,23 +255,23 @@ for (i in 1:nrow(model_conditions)) {
   
   table_mm_i <- data_stats %>%
     filter(Fertilizer_trial == treatment_i) %>%
-    select(one_of(c('Year','Field', "Treatment", 'Block', 'Cropping_system', "Dose_trial", performance_i))) %>%
+    select(one_of(c("Year","Field", "Treatment", "Block", "Cropping_system", "Dose_trial", performance_i))) %>%
     rename(Dose = Dose_trial) %>%
     drop_na()
   
-  if (model_type_i == 'linear') {
+  if (model_type_i == "linear") {
     lmm[[i]] <- lme(as.formula(paste0(performance_i, " ~ Dose")),
                     random = ~ 1 + 1|Year/Field/Treatment,
                     data = table_mm_i)
     p_value <- summary(lmm[[i]])$tTable[2, 5]
     slope <- coef(lmm[[i]])[1, 2]
-  } else if (model_type_i == 'quadratic') {
+  } else if (model_type_i == "quadratic") {
     lmm[[i]] <- lme(as.formula(paste0(performance_i, " ~ Dose + I(Dose^2)")),
                     random = ~ 1 + 1|Year/Field/Treatment,
                     data = table_mm_i)
     p_value <- summary(lmm[[i]])$tTable[3, 5]
     slope <- coef(lmm[[i]])[1, 3]
-  } else if (model_type_i == 'none') {
+  } else if (model_type_i == "none") {
     lmm[[i]] <- NA
     p_value <- NA
     slope <- NA
@@ -297,7 +294,6 @@ for (i in 1:nrow(model_conditions)) {
                             slope = slope)
   }
 }
-
 ```
 
 Tidying the predicted models.
@@ -330,11 +326,12 @@ Results will be plotted by nutrient and performance types.
 ##### Quality
 
 ```{r, fig.height=12, fig.width=8}
-n_perf <- length(physiology_index)
+n_perf <- length(quality_index)
 n_elem <- 3
 
 data_gg <- data_tidy %>%
   filter(Fertilizer_trial %in% c("N", "P", "K") & performance_name %in% quality_index) %>%
+  mutate(Fertilizer_trial = factor(Fertilizer_trial, levels = c("N", "P", "K"))) %>% 
   drop_na()
 pred_gg <- pred_tidy %>%
   filter(Fertilizer_trial %in% c("N", "P", "K") & performance_name %in% quality_index) %>%
@@ -347,14 +344,14 @@ ggplot(data = data_gg, mapping = aes(x = Dose_trial, y = performance_value)) +
   labs(x = expression("Dose (kg ha"^"-1"~")"), y = "Performance") +
   geom_label(data = pred_gg, aes(label = paste("Slope =", signif(slope, 3))), x = -Inf, y = Inf, hjust = -0.1, vjust = 1.5) +
   geom_label(data = pred_gg, aes(label = paste("p =", signif(p_value, 3))), x = -Inf, y = Inf, hjust = -0.18, vjust = 2.5) +
+  theme_bw() +
   theme(axis.title.y = element_blank(),
         strip.background = element_rect(fill = "transparent", colour = "transparent"),
         strip.placement = "outside",
         strip.text.y = element_text(angle=270, size = 12),
-        strip.text.x = element_text(size = 12))
-
-ggsave("images/grid_macro&quality.pdf", width = n_elem * 3, height = n_perf * 2.5, dpi=300)
-ggsave("images/grid_macro&quality.png", width = n_elem * 3, height = n_perf * 2.5, dpi=300)
+        strip.text.x = element_text(size = 12)) +
+  ggsave("images/grid_macro&quality.pdf", width = n_elem * 3, height = n_perf * 2.5, dpi = 300) +
+  ggsave("images/grid_macro&quality.png", width = n_elem * 3, height = n_perf * 2.5, dpi = 300)
 ```
 
 ##### Physiology
@@ -365,6 +362,7 @@ n_elem <- 3
 
 data_gg <- data_tidy %>%
   filter(Fertilizer_trial %in% c("N", "P", "K") & performance_name %in% physiology_index) %>%
+  mutate(Fertilizer_trial = factor(Fertilizer_trial, levels = c("N", "P", "K"))) %>% 
   drop_na()
 pred_gg <- pred_tidy %>%
   filter(Fertilizer_trial %in% c("N", "P", "K") & performance_name %in% physiology_index) %>%
@@ -377,14 +375,14 @@ ggplot(data = data_gg, mapping = aes(x = Dose_trial, y = performance_value)) +
   labs(x = expression("Dose (kg ha"^"-1"~")"), y = "Performance") +
   geom_label(data = pred_gg, aes(label = paste("Slope =", signif(slope, 3))), x = -Inf, y = Inf, hjust = -0.1, vjust = 1.5) +
   geom_label(data = pred_gg, aes(label = paste("p =", signif(p_value, 3))), x = -Inf, y = Inf, hjust = -0.18, vjust = 2.5) +
+  theme_bw() +
   theme(axis.title.y = element_blank(),
         strip.background = element_rect(fill = "transparent", colour = "transparent"),
         strip.placement = "outside",
         strip.text.y = element_text(angle=270, size = 12),
-        strip.text.x = element_text(size = 12))
-
-ggsave("images/grid_macro&physiology.pdf", width = n_elem * 3, height = n_perf * 2.5, dpi=300)
-ggsave("images/grid_macro&physiology.png", width = n_elem * 3, height = n_perf * 2.5, dpi=300)
+        strip.text.x = element_text(size = 12)) +
+  ggsave("images/grid_macro&physiology.pdf", width = n_elem * 3, height = n_perf * 2.8, dpi = 300) +
+  ggsave("images/grid_macro&physiology.png", width = n_elem * 3, height = n_perf * 2.8, dpi = 300)
 ```
 
 #### Secondary and micro-elements
@@ -409,14 +407,14 @@ ggplot(data = data_gg, mapping = aes(x = Dose_trial, y = performance_value)) +
   labs(x = expression("Dose (kg ha"^"-1"~")"), y = "Performance") +
   geom_label(data = pred_gg, aes(label = paste("Slope =", signif(slope, 3))), x = -Inf, y = Inf, hjust = -0.1, vjust = 1.5) +
   geom_label(data = pred_gg, aes(label = paste("p =", signif(p_value, 3))), x = -Inf, y = Inf, hjust = -0.18, vjust = 2.5) +
+  theme_bw() +
   theme(axis.title.y = element_blank(),
         strip.background = element_rect(fill = "transparent", colour = "transparent"),
         strip.placement = "outside",
         strip.text.y = element_text(angle=270, size = 12),
-        strip.text.x = element_text(size = 12))
-
-ggsave("images/grid_secondary-micro&quality.pdf", width = n_elem * 3, height = n_perf * 2.5, dpi=300)
-ggsave("images/grid_secondary-micro&quality.png", width = n_elem * 3, height = n_perf * 2.5, dpi=300)
+        strip.text.x = element_text(size = 12)) +
+  ggsave("images/grid_secondary-micro&quality.pdf", width = n_elem * 3, height = n_perf * 2.5, dpi = 300) +
+  ggsave("images/grid_secondary-micro&quality.png", width = n_elem * 3, height = n_perf * 2.5, dpi = 300)
 ```
 
 ##### Physiology
@@ -439,12 +437,12 @@ ggplot(data = data_gg, mapping = aes(x = Dose_trial, y = performance_value)) +
   labs(x = expression("Dose (kg ha"^"-1"~")"), y = "Performance") +
   geom_label(data = pred_gg, aes(label = paste("Slope =", signif(slope, 3))), x = -Inf, y = Inf, hjust = -0.1, vjust = 1.5) +
   geom_label(data = pred_gg, aes(label = paste("p =", signif(p_value, 3))), x = -Inf, y = Inf, hjust = -0.18, vjust = 2.5) +
+  theme_bw() +
   theme(axis.title.y = element_blank(),
         strip.background = element_rect(fill = "transparent", colour = "transparent"),
         strip.placement = "outside",
         strip.text.y = element_text(angle=270, size = 12),
-        strip.text.x = element_text(size = 12))
-
-ggsave("images/grid_secondary-micro&physiology.pdf", width = n_elem * 3, height = n_perf * 2.5, dpi=300)
-ggsave("images/grid_secondary-micro&physiology.png", width = n_elem * 3, height = n_perf * 2.5, dpi=300)
+        strip.text.x = element_text(size = 12)) +
+  ggsave("images/grid_secondary-micro&physiology.pdf", width = n_elem * 3, height = n_perf * 2.8, dpi = 300) +
+  ggsave("images/grid_secondary-micro&physiology.png", width = n_elem * 3, height = n_perf * 2.8, dpi = 300)
 ```
