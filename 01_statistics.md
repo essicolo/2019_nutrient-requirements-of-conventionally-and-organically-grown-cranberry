@@ -131,16 +131,16 @@ data_stats %>%
     ## # A tibble: 10 x 22
     ##     Year Field Treatment Block Cropping_system Fertilizer_trial Fertilizer_form…
     ##    <dbl> <chr> <chr>     <dbl> <chr>           <chr>            <chr>           
-    ##  1  2014 83H   <NA>         NA <NA>            <NA>             10-10-20        
-    ##  2  2015 9     Mg0           1 Conventional    Mg               <NA>            
-    ##  3  2018 10    N0            2 Conventional    N                13-13-13        
-    ##  4  2014 45    N45           1 Conventional    N                21-0-0          
-    ##  5  2018 10    K0            1 Conventional    K                13-13-13        
-    ##  6  2018 45    K80           1 Conventional    K                <NA>            
-    ##  7  2016 41    <NA>         NA Conventional    <NA>             <NA>            
-    ##  8  2013 D     <NA>          2 <NA>            <NA>             <NA>            
-    ##  9  2016 P06   <NA>         NA Conventional    <NA>             <NA>            
-    ## 10  2016 37    <NA>         NA Conventional    <NA>             <NA>            
+    ##  1  2018 45    Mg12          1 Conventional    Mg               <NA>            
+    ##  2  2014 C11   <NA>         NA Conventional    <NA>             <NA>            
+    ##  3  2018 A9    S1000         2 Organic         S                4,9-2,7-3,5     
+    ##  4  2008 4     <NA>         NA Organic         <NA>             <NA>            
+    ##  5  2000 CA27  P11           6 Conventional    P                11-52-0 et 11-3…
+    ##  6  2014 45    B1            2 Conventional    B                0-0-0-21        
+    ##  7  2013 D     <NA>          3 <NA>            <NA>             <NA>            
+    ##  8  2014 10    Cu2           1 Conventional    Cu               0-0-0-25        
+    ##  9  2016 45    K40           2 Conventional    K                0-0-50; 0-0-22-…
+    ## 10  2014 9     B0            2 Conventional    B                <NA>            
     ## # … with 15 more variables: Dose_trial <dbl>,
     ## #   `Fertilizer-tot-dose_N_kg_ha` <dbl>, `Fertilizer-tot-dose_P_kg_ha` <dbl>,
     ## #   `Fertilizer-tot-dose_K_kg_ha` <dbl>, `Fertilizer-tot-dose_Mg_kg_ha` <dbl>,
@@ -168,11 +168,11 @@ model_conditions %>%
 ```
 
     ##   performance_name Fertilizer_trial index
-    ## 1         Firmness                B    35
+    ## 1       Fruit_stem                K    23
     ## 2             Brix                P    10
-    ## 3       Fruit_stem                K    23
-    ## 4            Fruit               Mg    32
-    ## 5   Berry_moisture               Mg    29
+    ## 3         Firmness               Cu    43
+    ## 4             TAcy               Cu    41
+    ## 5   Berry_moisture               Cu    45
 
 We are adding a column to the grid containing the information on which
 option to choose. By default, the option is linear.
@@ -382,39 +382,50 @@ pred_tidy <- pred_tidy %>%
 pred_tidy %>% sample_n(10)
 ```
 
-    ##    Dose_trial performance_value Fertilizer_trial      p_value         slope
-    ## 1  54.7249095         26.832980                N 4.044439e-07 -1.839639e-01
-    ## 2  16.8384337          6.013884                N 1.643050e-02 -5.144520e-03
-    ## 3   1.2631579         88.746623               Mg 2.168280e-01 -9.686872e-03
-    ## 4  46.8947368          1.202566                P 9.427885e-01  8.031702e-05
-    ## 5   0.4736842         42.314684                B 5.175224e-01  2.147222e+00
-    ## 6   4.4210526          7.384008               Mg 7.197506e-01  5.609072e-03
-    ## 7  71.5633432         88.852985                N 2.521423e-02  1.027920e-02
-    ## 8   1.6842105          1.504827               Cu 9.716996e-01  7.376140e-04
-    ## 9  52.1052632         32.180059                P 5.752483e-01 -1.076260e-02
-    ## 10 16.8384337          1.450410                N 1.904414e-06  2.829992e-03
+    ##     Dose_trial performance_value Fertilizer_trial      p_value         slope
+    ## 1   58.1928421         40.788680                K 6.541378e-02  3.566617e-02
+    ## 2    0.6315789         33.415481               Cu 2.664434e-01 -3.894547e+00
+    ## 3   12.6315789        217.692434                K 1.660336e-02  3.818750e-01
+    ## 4   16.8384337          7.935971                N 7.799831e-09 -1.201912e-02
+    ## 5   72.7410526         41.307559                K 6.541378e-02  3.566617e-02
+    ## 6   44.2105263        223.116447                N 9.408909e-07  1.665417e+00
+    ## 7    1.5789474         41.996665               Cu 6.797490e-01  5.790711e-01
+    ## 8   21.7105263          7.477684                P          NaN -2.493333e-02
+    ## 9   57.3157895         35.455509                P 5.341179e-01 -1.164211e-02
+    ## 10 116.3856842         88.590416                K 9.947053e-01 -5.250309e-06
     ##    pvalue_alpha performance_name
-    ## 1        ≤ 0.05             TAcy
-    ## 2        ≤ 0.05         Firmness
-    ## 3        > 0.05   Berry_moisture
-    ## 4        > 0.05     Berry_weight
+    ## 1        > 0.05            Yield
+    ## 2        > 0.05             TAcy
+    ## 3        ≤ 0.05            Fruit
+    ## 4        ≤ 0.05             Brix
     ## 5        > 0.05            Yield
-    ## 6        > 0.05             Brix
-    ## 7        ≤ 0.05   Berry_moisture
-    ## 8        > 0.05     Berry_weight
-    ## 9        > 0.05             TAcy
-    ## 10       ≤ 0.05     Berry_weight
-    ##                                       performance_labels performance_type
-    ## 1        TAcy~plain('(')~mg~100^{plain('-1')}~plain(')')          Quality
-    ## 2     Firmness~plain('(')~N~sec^{plain('-1')}~plain(')')          Quality
-    ## 3        Berry~moisture~plain('(')~plain('%')~plain(')')          Quality
-    ## 4                   Berry~weight~plain('(')~g~plain(')')          Quality
-    ## 5  Berry~yield~plain('(')~Mg~ha^{plain('-1')}~plain(')')          Quality
-    ## 6                                              {}^o~Brix          Quality
-    ## 7        Berry~moisture~plain('(')~plain('%')~plain(')')          Quality
-    ## 8                   Berry~weight~plain('(')~g~plain(')')          Quality
-    ## 9        TAcy~plain('(')~mg~100^{plain('-1')}~plain(')')          Quality
-    ## 10                  Berry~weight~plain('(')~g~plain(')')          Quality
+    ## 6        ≤ 0.05            Fruit
+    ## 7        > 0.05            Yield
+    ## 8          <NA>             Brix
+    ## 9        > 0.05            Yield
+    ## 10       > 0.05   Berry_moisture
+    ##                                                  performance_labels
+    ## 1             Berry~yield~plain('(')~Mg~ha^{plain('-1')}~plain(')')
+    ## 2                   TAcy~plain('(')~mg~100^{plain('-1')}~plain(')')
+    ## 3  Berry~per~fruiting~upright~plain('(')~m^{plain('-2')}~plain(')')
+    ## 4                                                         {}^o~Brix
+    ## 5             Berry~yield~plain('(')~Mg~ha^{plain('-1')}~plain(')')
+    ## 6  Berry~per~fruiting~upright~plain('(')~m^{plain('-2')}~plain(')')
+    ## 7             Berry~yield~plain('(')~Mg~ha^{plain('-1')}~plain(')')
+    ## 8                                                         {}^o~Brix
+    ## 9             Berry~yield~plain('(')~Mg~ha^{plain('-1')}~plain(')')
+    ## 10                  Berry~moisture~plain('(')~plain('%')~plain(')')
+    ##    performance_type
+    ## 1           Quality
+    ## 2           Quality
+    ## 3        Physiology
+    ## 4           Quality
+    ## 5           Quality
+    ## 6        Physiology
+    ## 7           Quality
+    ## 8           Quality
+    ## 9           Quality
+    ## 10          Quality
 
 Tidying the `data_stats` table before going further.
 
@@ -441,6 +452,7 @@ n_elem <- 3
 data_gg <- data_tidy %>%
   filter(Fertilizer_trial %in% c("N", "P", "K") & performance_name %in% quality_index) %>%
   mutate(Fertilizer_trial = factor(Fertilizer_trial, levels = c("N", "P", "K"))) %>% 
+  select(Dose_trial, performance_value, performance_labels, Fertilizer_trial) %>% 
   drop_na()
 pred_gg <- pred_tidy %>%
   filter(Fertilizer_trial %in% c("N", "P", "K") & performance_name %in% quality_index) %>%
@@ -474,6 +486,7 @@ n_elem <- 3
 data_gg <- data_tidy %>%
   filter(Fertilizer_trial %in% c("N", "P", "K") & performance_name %in% physiology_index) %>%
   mutate(Fertilizer_trial = factor(Fertilizer_trial, levels = c("N", "P", "K"))) %>% 
+  select(Dose_trial, performance_value, performance_labels, Fertilizer_trial) %>% 
   drop_na()
 pred_gg <- pred_tidy %>%
   filter(Fertilizer_trial %in% c("N", "P", "K") & performance_name %in% physiology_index) %>%
@@ -508,6 +521,7 @@ n_elem <- 3
 
 data_gg <- data_tidy %>%
   filter(Fertilizer_trial %in% c("Mg", "B", "Cu") & performance_name %in% quality_index) %>%
+  select(Dose_trial, performance_value, performance_labels, Fertilizer_trial) %>% 
   drop_na()
 pred_gg <- pred_tidy %>%
   filter(Fertilizer_trial %in% c("Mg", "B", "Cu") & performance_name %in% quality_index) %>%
@@ -540,6 +554,7 @@ n_elem <- 3
 
 data_gg <- data_tidy %>%
   filter(Fertilizer_trial %in% c("Mg", "B", "Cu") & performance_name %in% physiology_index) %>%
+  select(Dose_trial, performance_value, performance_labels, Fertilizer_trial) %>% 
   drop_na()
 pred_gg <- pred_tidy %>%
   filter(Fertilizer_trial %in% c("Mg", "B", "Cu") & performance_name %in% physiology_index) %>%
