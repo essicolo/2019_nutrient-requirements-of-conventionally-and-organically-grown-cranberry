@@ -330,6 +330,7 @@ n_elem <- 3
 data_gg <- data_tidy %>%
   filter(Fertilizer_trial %in% c("N", "P", "K") & performance_name %in% quality_index) %>%
   mutate(Fertilizer_trial = factor(Fertilizer_trial, levels = c("N", "P", "K"))) %>% 
+  select(Dose_trial, performance_value, performance_labels, Fertilizer_trial) %>% 
   drop_na()
 pred_gg <- pred_tidy %>%
   filter(Fertilizer_trial %in% c("N", "P", "K") & performance_name %in% quality_index) %>%
@@ -361,6 +362,7 @@ n_elem <- 3
 data_gg <- data_tidy %>%
   filter(Fertilizer_trial %in% c("N", "P", "K") & performance_name %in% physiology_index) %>%
   mutate(Fertilizer_trial = factor(Fertilizer_trial, levels = c("N", "P", "K"))) %>% 
+  select(Dose_trial, performance_value, performance_labels, Fertilizer_trial) %>% 
   drop_na()
 pred_gg <- pred_tidy %>%
   filter(Fertilizer_trial %in% c("N", "P", "K") & performance_name %in% physiology_index) %>%
@@ -393,6 +395,7 @@ n_elem <- 3
 
 data_gg <- data_tidy %>%
   filter(Fertilizer_trial %in% c("Mg", "B", "Cu") & performance_name %in% quality_index) %>%
+  select(Dose_trial, performance_value, performance_labels, Fertilizer_trial) %>% 
   drop_na()
 pred_gg <- pred_tidy %>%
   filter(Fertilizer_trial %in% c("Mg", "B", "Cu") & performance_name %in% quality_index) %>%
@@ -423,6 +426,7 @@ n_elem <- 3
 
 data_gg <- data_tidy %>%
   filter(Fertilizer_trial %in% c("Mg", "B", "Cu") & performance_name %in% physiology_index) %>%
+  select(Dose_trial, performance_value, performance_labels, Fertilizer_trial) %>% 
   drop_na()
 pred_gg <- pred_tidy %>%
   filter(Fertilizer_trial %in% c("Mg", "B", "Cu") & performance_name %in% physiology_index) %>%
