@@ -28,8 +28,6 @@ To initiate the session, we load the following libraries.
 library("tidyverse") # generic data handling and plotting
 library("GGally")
 library("nlme") # mixed models
-# library("grid")
-# library("gridExtra")
 ```
 
 All data are placed in a single csv file.
