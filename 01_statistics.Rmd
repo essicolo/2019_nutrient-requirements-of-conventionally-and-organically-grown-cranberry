@@ -263,19 +263,19 @@ We are adding a column to the grid containing the information on which option to
 model_conditions$model_type <- "linear"
 ```
 
-Where the modeling threw erors due to lack of data, I imposed `"none"` as `model_type`.
+Where the modeling threw errors due to lack of data, I imposed `"none"` as `model_type`.
 
 ```{r}
-model_conditions$model_type[model_conditions$Fertilizer == "B" & model_conditions$performance_index == "Brix"] <- "none"
+model_conditions$model_type[model_conditions$Fertilizer_trial == "B" & model_conditions$performance_name == "Brix"] <- "none"
 ```
 
 The following instructions impose a quadratic model to some combinaisons. We selected quadratic where it visually seemed appropriate.
 
 ```{r}
-model_conditions$model_type[model_conditions$Fertilizer == "N" & model_conditions$performance_index == "Yield"] <- "quadratic"
-model_conditions$model_type[model_conditions$Fertilizer == "N" & model_conditions$performance_index == "Berry_weight"] <- "quadratic"
-model_conditions$model_type[model_conditions$Fertilizer == "K" & model_conditions$performance_index == "Yield"] <- "quadratic"
-model_conditions$model_type[model_conditions$Fertilizer == "K" & model_conditions$performance_index == "Berry_weight"] <- "quadratic"
+model_conditions$model_type[model_conditions$Fertilizer_trial == "N" & model_conditions$performance_name == "Yield"] <- "quadratic"
+model_conditions$model_type[model_conditions$Fertilizer_trial == "N" & model_conditions$performance_name == "Berry_weight"] <- "quadratic"
+model_conditions$model_type[model_conditions$Fertilizer_trial == "K" & model_conditions$performance_name == "Yield"] <- "quadratic"
+model_conditions$model_type[model_conditions$Fertilizer_trial == "K" & model_conditions$performance_name == "Berry_weight"] <- "quadratic"
 ```
 
 ### Effect of nitrogen source
@@ -369,8 +369,8 @@ interval_lmmN %>% ggplot(aes(x = est., y = rowname)) +
     strip.placement = "outside",
     panel.spacing = unit(2, "lines")
   ) +
-  ggsave("images/sources-nitrogen.pdf", width = plot_cols * 5, height = plot_rows * 2.2, dpi = 300) +
-  ggsave("images/sources-nitrogen.png", width = plot_cols * 5, height = plot_rows * 2.2, dpi = 300)
+  ggsave("images/sources-nitrogen.pdf", width = plot_cols * 5, height = plot_rows * 2.5, dpi = 300) +
+  ggsave("images/sources-nitrogen.png", width = plot_cols * 5, height = plot_rows * 2.5, dpi = 300)
 ```
 
 ### Effect of fertlizers and doses
