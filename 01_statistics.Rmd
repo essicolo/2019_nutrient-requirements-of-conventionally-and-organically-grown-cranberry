@@ -138,6 +138,8 @@ ggsave("images/correlation-physiology.png", width = 8, height = 8, dpi = 300)
 knitr::include_graphics("images/correlation-physiology.png")
 ```
 
+Pairwise linear regressions.
+
 ```{r include = FALSE}
 mod_phys <- list()
 intervals_phys <- list()
@@ -182,7 +184,6 @@ library("patchwork")
 physio_plot[[1]] / physio_plot[[2]] / physio_plot[[3]] / physio_plot[[4]]
 ggsave("images/lm-physiology.png", width = 6, height = 14, dpi = 300)
 ```
-
 
 ```{r fig.align="center", fig.cap="Linear relationships between physiological measurements and berry yield.", echo = FALSE}
 knitr::include_graphics("images/lm-physiology.png")
@@ -246,8 +247,7 @@ data_stats %>%
   sample_n(10)
 ```
 
-
-Combination of performance-treatment will be subjected to a mixed model, but some with a linear model, and other with a quadratic model. Moreover, some combinaisons of performance-treatment were not tested. We aim to loop each possible combinaison to fit a linear model, a quadratic model or no model at all. The first step of this process is to create a grid of these combinaisons.
+Combination of performance-treatment will be subjected to a mixed model, but some with a linear model, and other with a quadratic model. Moreover, some combinations of performance-treatment were not tested. We aim to loop each possible combination to fit a linear model, a quadratic model or no model at all. The first step of this process is to create a grid of these combinations.
 
 ```{r}
 model_conditions <- expand.grid(
@@ -368,15 +368,16 @@ interval_lmmN %>% ggplot(aes(x = est., y = rowname)) +
     strip.text.y = element_text(angle = 0),
     axis.title.x = element_blank(),
     strip.background = element_rect(fill = "transparent", colour = "transparent"),
-    strip.placement = "outside"
+    strip.placement = "outside",
+    panel.spacing = unit(2, "lines")
   ) +
-  ggsave("images/sources-nitrogen.pdf", width = plot_cols * 5, height = plot_rows * 2, dpi = 300) +
-  ggsave("images/sources-nitrogen.png", width = plot_cols * 5, height = plot_rows * 2, dpi = 300)
+  ggsave("images/sources-nitrogen.pdf", width = plot_cols * 5, height = plot_rows * 2.2, dpi = 300) +
+  ggsave("images/sources-nitrogen.png", width = plot_cols * 5, height = plot_rows * 2.2, dpi = 300)
 ```
 
 ### Effect of fertlizers and doses
 
-For all fertlizers and perfomance indexes, we run a linear or quadratic model (disregarding the effect of fertilizer types).
+For all fertilizers and performance indexes, we run a linear or quadratic model (disregarding the effect of fertilizer types).
 
 ```{r}
 alpha <- 0.05
