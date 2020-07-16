@@ -246,16 +246,16 @@ data_stats %>%
     ## # A tibble: 10 x 22
     ##     Year Field Treatment Block Cropping_system Fertilizer_trial Fertilizer_form…
     ##    <dbl> <chr> <chr>     <dbl> <chr>           <chr>            <chr>           
-    ##  1  2016 45    N30           2 Conventional    N                21-0-0          
-    ##  2  2014 A9    N0            1 Conventional    N                <NA>            
-    ##  3  2018 10    K40           1 Conventional    K                13-13-13        
-    ##  4  2014 E10   <NA>         NA Conventional    <NA>             <NA>            
-    ##  5  2016 P06   <NA>         NA Conventional    <NA>             <NA>            
-    ##  6  2000 CA07  P01           6 Conventional    P                11-52-0         
-    ##  7  2001 CA07  P09           4 Conventional    P                11-52-0         
-    ##  8  2015 10    K0            2 Conventional    K                <NA>            
-    ##  9  2014 M03   <NA>         NA Conventional    <NA>             <NA>            
-    ## 10  2001 CA06  P06           1 Conventional    P                11-52-0         
+    ##  1  2002 <NA>  <NA>         NA <NA>            <NA>             <NA>            
+    ##  2  2010 10    <NA>         NA Organic         <NA>             <NA>            
+    ##  3  2015 45    N0            1 Conventional    N                <NA>            
+    ##  4  2015 45    N45           2 Conventional    N                21-0-0          
+    ##  5  2016 45    P30           1 Conventional    P                0-46-0          
+    ##  6  2013 D     <NA>          1 <NA>            <NA>             <NA>            
+    ##  7  2000 CA11  P02           3 Conventional    P                11-52-0         
+    ##  8  2000 CA11  P08           4 Conventional    P                11-52-0         
+    ##  9  1989 <NA>  <NA>         NA <NA>            <NA>             <NA>            
+    ## 10  2018 9     N60           2 Conventional    N                <NA>            
     ## # … with 15 more variables: Dose_trial <dbl>,
     ## #   `Fertilizer-tot-dose_N_kg_ha` <dbl>, `Fertilizer-tot-dose_P_kg_ha` <dbl>,
     ## #   `Fertilizer-tot-dose_K_kg_ha` <dbl>, `Fertilizer-tot-dose_Mg_kg_ha` <dbl>,
@@ -282,11 +282,11 @@ model_conditions %>%
 ```
 
     ##   performance_name Fertilizer_trial index
-    ## 1            Yield               Mg    30
-    ## 2             Brix                P    10
-    ## 3       Fruit_stem                B    39
-    ## 4            Yield                K    22
-    ## 5     Berry_weight                P    12
+    ## 1         Firmness                P    11
+    ## 2       Fruit_stem                N     7
+    ## 3   Berry_moisture                N     5
+    ## 4         Firmness                N     3
+    ## 5            Yield                B    38
 
 We are adding a column to the grid containing the information on which
 option to choose. By default, the option is linear.
@@ -309,7 +309,7 @@ appropriate.
 ``` r
 model_conditions$model_type[model_conditions$Fertilizer_trial == "N" & model_conditions$performance_name == "Yield"] <- "quadratic"
 model_conditions$model_type[model_conditions$Fertilizer_trial == "N" & model_conditions$performance_name == "Berry_weight"] <- "quadratic"
-model_conditions$model_type[model_conditions$Fertilizer_trial == "K" & model_conditions$performance_name == "Yield"] <- "quadratic"
+#model_conditions$model_type[model_conditions$Fertilizer_trial == "K" & model_conditions$performance_name == "Yield"] <- "quadratic"
 model_conditions$model_type[model_conditions$Fertilizer_trial == "K" & model_conditions$performance_name == "Berry_weight"] <- "quadratic"
 ```
 
@@ -498,50 +498,39 @@ pred_tidy <- pred_tidy %>%
 pred_tidy %>% sample_n(10)
 ```
 
-    ##    Dose_trial performance_value Fertilizer_trial      p_value        slope
-    ## 1  12.6288253          7.986567                N 7.799830e-09 -0.012019116
-    ## 2   6.3157895          5.966637               Mg 6.384705e-01 -0.033420880
-    ## 3  44.2105263        106.073684                N 7.824556e-03  0.365833333
-    ## 4   1.3684211         30.545815               Cu 2.664434e-01 -3.894546721
-    ## 5  88.4210526        246.634539                K 1.660336e-02  0.381875000
-    ## 6   0.7368421          1.504128               Cu 9.716996e-01  0.000737614
-    ## 7   8.4192168          8.037163                N 7.799830e-09 -0.012019116
-    ## 8   1.0000000         88.302916                B 2.564350e-01  0.095683242
-    ## 9   0.6315789        237.470395               Cu 1.740546e-01 11.531250000
-    ## 10 12.6315789        170.524342                N 9.408909e-07  1.665416667
+    ##     Dose_trial performance_value Fertilizer_trial      p_value         slope
+    ## 1   10.1052632        114.302632               Mg 8.099716e-01 -1.927083e-01
+    ## 2   21.8223158         39.491483                K 6.541378e-02  3.566617e-02
+    ## 3    0.0000000          7.560548                K 9.684299e-01  4.222873e-05
+    ## 4    0.6315789          7.362753               Mg 7.197506e-01  5.609072e-03
+    ## 5    2.0000000          7.573633               Cu 2.830581e-01  1.124023e-01
+    ## 6   17.3684211         88.659167                P 9.732028e-01  9.589359e-05
+    ## 7   71.5633432          7.278226                N 7.799830e-09 -1.201912e-02
+    ## 8   78.1578947         31.899665                P 5.752483e-01 -1.076260e-02
+    ## 9   12.6315789         88.658712                P 9.732028e-01  9.589359e-05
+    ## 10 138.2080000         88.590301                K 9.947053e-01 -5.250309e-06
     ##    pvalue_alpha performance_name
-    ## 1        ≤ 0.05             Brix
-    ## 2        > 0.05         Firmness
-    ## 3        ≤ 0.05       Fruit_stem
-    ## 4        > 0.05             TAcy
-    ## 5        ≤ 0.05            Fruit
-    ## 6        > 0.05     Berry_weight
+    ## 1        > 0.05       Fruit_stem
+    ## 2        > 0.05            Yield
+    ## 3        > 0.05             Brix
+    ## 4        > 0.05             Brix
+    ## 5        > 0.05             Brix
+    ## 6        > 0.05   Berry_moisture
     ## 7        ≤ 0.05             Brix
-    ## 8        > 0.05   Berry_moisture
-    ## 9        > 0.05            Fruit
-    ## 10       ≤ 0.05            Fruit
-    ##                                                  performance_labels
-    ## 1                                                         {}^o~Brix
-    ## 2                Firmness~plain('(')~N~sec^{plain('-1')}~plain(')')
-    ## 3                 Berry~count~plain('(')~m^{plain('-2')}~plain(')')
-    ## 4                   TAcy~plain('(')~mg~100^{plain('-1')}~plain(')')
-    ## 5  Berry~per~fruiting~upright~plain('(')~m^{plain('-2')}~plain(')')
-    ## 6                              Berry~weight~plain('(')~g~plain(')')
-    ## 7                                                         {}^o~Brix
-    ## 8                   Berry~moisture~plain('(')~plain('%')~plain(')')
-    ## 9  Berry~per~fruiting~upright~plain('(')~m^{plain('-2')}~plain(')')
-    ## 10 Berry~per~fruiting~upright~plain('(')~m^{plain('-2')}~plain(')')
-    ##    performance_type
-    ## 1           Quality
-    ## 2           Quality
-    ## 3        Physiology
-    ## 4           Quality
-    ## 5        Physiology
-    ## 6           Quality
-    ## 7           Quality
-    ## 8           Quality
-    ## 9        Physiology
-    ## 10       Physiology
+    ## 8        > 0.05             TAcy
+    ## 9        > 0.05   Berry_moisture
+    ## 10       > 0.05   Berry_moisture
+    ##                                       performance_labels performance_type
+    ## 1      Berry~count~plain('(')~m^{plain('-2')}~plain(')')       Physiology
+    ## 2  Berry~yield~plain('(')~Mg~ha^{plain('-1')}~plain(')')          Quality
+    ## 3                                              {}^o~Brix          Quality
+    ## 4                                              {}^o~Brix          Quality
+    ## 5                                              {}^o~Brix          Quality
+    ## 6        Berry~moisture~plain('(')~plain('%')~plain(')')          Quality
+    ## 7                                              {}^o~Brix          Quality
+    ## 8        TAcy~plain('(')~mg~100^{plain('-1')}~plain(')')          Quality
+    ## 9        Berry~moisture~plain('(')~plain('%')~plain(')')          Quality
+    ## 10       Berry~moisture~plain('(')~plain('%')~plain(')')          Quality
 
 Tidying the `data_stats` table before going further.
 

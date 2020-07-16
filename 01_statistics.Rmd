@@ -274,7 +274,7 @@ The following instructions impose a quadratic model to some combinaisons. We sel
 ```{r}
 model_conditions$model_type[model_conditions$Fertilizer_trial == "N" & model_conditions$performance_name == "Yield"] <- "quadratic"
 model_conditions$model_type[model_conditions$Fertilizer_trial == "N" & model_conditions$performance_name == "Berry_weight"] <- "quadratic"
-model_conditions$model_type[model_conditions$Fertilizer_trial == "K" & model_conditions$performance_name == "Yield"] <- "quadratic"
+#model_conditions$model_type[model_conditions$Fertilizer_trial == "K" & model_conditions$performance_name == "Yield"] <- "quadratic"
 model_conditions$model_type[model_conditions$Fertilizer_trial == "K" & model_conditions$performance_name == "Berry_weight"] <- "quadratic"
 ```
 
